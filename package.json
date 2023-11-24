@@ -1,0 +1,24 @@
+{
+  "name": "rallyefinder",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "prebuild": "rm -rf dist",
+    "build": "esbuild index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
+    "postbuild": "cd dist && zip -r index.zip index.js*",
+    "deploy": "aws lambda update-function-code --function-name rally-scanner --zip-file fileb://dist/index.zip"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-ses": "^3.338.0",
+    "axios": "^1.4.0",
+    "dayjs": "^1.11.7",
+    "geolib": "^3.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.2.3",
+    "esbuild": "^0.17.19"
+  }
+}
