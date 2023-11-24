@@ -1,13 +1,17 @@
+import dotenv from "dotenv";
 import axios from "axios";
-import fs from "fs";
-import { RelationWithDate, Station } from "./types";
 import dayjs from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+
+dayjs.extend(isSameOrBefore);
+dayjs.extend(isSameOrAfter);
+dotenv.config();
+
+import { RelationWithDate, Station } from "./types";
 import { allowedEndDate, allowedStartDate } from "./config";
 import { sendRelationsViaEmail } from "./relationSender";
-dayjs.extend(isSameOrBefore)
-dayjs.extend(isSameOrAfter)
+import { writeFileConditional } from "./util";
 
 const defaultHeaders = {
   Accept: "application/json, text/plain, */*",
@@ -22,8 +26,6 @@ const defaultHeaders = {
   "Sec-Fetch-Site": "cross-site",
 };
 
-
-
 export async function handler() {
   const allStations = await getAllStations();
 
@@ -35,17 +37,17 @@ export async function handler() {
 
   const readableMatchingDateRelations = matchingRelationsByDate.map(
     (relation) => ({
-      startStation: allStations.find(
-        (station) => station.id === relation.startStation
-      )?.name ?? "Unknown",
-      endStation: allStations.find(
-        (station) => station.id === relation.endStation
-      )?.name ?? "Unknown",
+      startStation:
+        allStations.find((station) => station.id === relation.startStation)
+          ?.name ?? "Unknown",
+      endStation:
+        allStations.find((station) => station.id === relation.endStation)
+          ?.name ?? "Unknown",
       timeWindow: relation.timeWindow,
     })
   );
   writeFileConditional(
-    "matchingRelationsByDate.json",
+    "out/matchingRelationsByDate.json",
     JSON.stringify(readableMatchingDateRelations, null, 2)
   );
   console.log("Found relations:", matchingRelationsByDate.length);
@@ -91,7 +93,7 @@ async function getAllStations(): Promise<Station[]> {
     }
   );
   writeFileConditional(
-    "stations.json",
+    "out/stations.json",
     JSON.stringify(allStationsResponse.data, null, 2)
   );
   const allStations = allStationsResponse.data?.items;
@@ -160,7 +162,7 @@ async function getAllRelations(
     readableRelations[startStationName] = endStationNames;
   }
   writeFileConditional(
-    "relations.json",
+    "out/relations.json",
     JSON.stringify(readableRelations, null, 2)
   );
   console.log("Total relations:", allRelations.length);
@@ -192,10 +194,4 @@ async function getMatchingDateRelations(
     }
   }
   return matchingRelations;
-}
-
-function writeFileConditional(filename: string, content: string) {
-  if (process.env.WRITE_JSON === "true") {
-    fs.writeFileSync(filename, content);
-  }
 }

@@ -15,10 +15,12 @@
     "@aws-sdk/client-ses": "^3.338.0",
     "axios": "^1.4.0",
     "dayjs": "^1.11.7",
+    "dotenv": "^16.3.1",
     "geolib": "^3.3.3"
   },
   "devDependencies": {
     "@types/node": "^20.2.3",
-    "esbuild": "^0.17.19"
+    "esbuild": "^0.17.19",
+    "ts-node": "^10.9.1"
   }
 }

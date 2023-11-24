@@ -1,5 +1,7 @@
-export const allowedStartDate = new Date("2023-06-05");
-export const allowedEndDate = new Date("2023-06-14");
+import { requireEnv } from "./util";
+
+export const allowedStartDate = new Date("2023-11-24");
+export const allowedEndDate = new Date("2023-12-30");
 
 export const berlinCoordinates = {
   latitude: "52°31'12.0\"N",
@@ -10,4 +12,4 @@ export const homeCoordinates = {
   longitude: "16°40'44.5\"E",
 };
 
-export const emailRecipients = ["noreply@example.com"];
+export const emailRecipient = requireEnv("EMAIL_RECIPIENT");
