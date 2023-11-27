@@ -1,19 +1,14 @@
 import dotenv from "dotenv";
-import axios from "axios";
-import dayjs from "dayjs";
-import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
-import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
-
-dayjs.extend(isSameOrBefore);
-dayjs.extend(isSameOrAfter);
 dotenv.config();
 
-import { RelationWithDate, Station } from "./types";
-import { allowedEndDate, allowedStartDate } from "./config";
+import { Relation, RelationWithDates } from "./types";
 import { sendRelationsViaEmail } from "./relationSender";
-import { writeFileConditional } from "./util";
+import { getAllRelations } from "./relations";
+import { getDateRangesForRelation } from "./relations";
+import { DateFilter, filterByDateRange } from "./filtering";
+import dayjs from "dayjs";
 
-const defaultHeaders = {
+export const defaultHeaders = {
   Accept: "application/json, text/plain, */*",
   "Accept-Encoding": "gzip, deflate, br",
   "Accept-Language": "en",
@@ -27,171 +22,35 @@ const defaultHeaders = {
 };
 
 export async function handler() {
-  const allStations = await getAllStations();
+  const allRelations = await getAllRelations();
 
-  const startStationIds = await getStartStationIds(allStations);
-
-  const allRelations = await getAllRelations(startStationIds, allStations);
-
-  const matchingRelationsByDate = await getMatchingDateRelations(allRelations);
-
-  const readableMatchingDateRelations = matchingRelationsByDate.map(
-    (relation) => ({
-      startStation:
-        allStations.find((station) => station.id === relation.startStation)
-          ?.name ?? "Unknown",
-      endStation:
-        allStations.find((station) => station.id === relation.endStation)
-          ?.name ?? "Unknown",
-      timeWindow: relation.timeWindow,
-    })
-  );
-  writeFileConditional(
-    "out/matchingRelationsByDate.json",
-    JSON.stringify(readableMatchingDateRelations, null, 2)
-  );
-  console.log("Found relations:", matchingRelationsByDate.length);
-
-  await sendRelationsViaEmail(readableMatchingDateRelations);
-}
-
-async function dateRangesForRelation(
-  startStation: number,
-  endStation: number
-): Promise<{ start: Date; end: Date }[]> {
-  const response = await axios.get<{ startDate: string; endDate: string }[]>(
-    `https://booking.roadsurfer.com/api/en/rally/timeframes?startStation=${startStation}&endStation=${endStation}`,
-    {
-      headers: {
-        ...defaultHeaders,
-        "X-Requested-Alias": "rally.timeframes",
-      },
-    }
+  const relationsWithDates = await getMatchingDateRelations(allRelations);
+  const relationsFilteredByDate = filterByDateRange(
+    relationsWithDates,
+    getDateFilterTemp()
   );
 
-  return response.data.map((timeframe) => ({
-    start: new Date(timeframe.startDate),
-    end: new Date(timeframe.endDate),
-  }));
-}
-
-function isDateMatch(timeframe: { start: Date; end: Date }) {
-  return (
-    dayjs(timeframe.start).isSameOrAfter(allowedStartDate, "day") &&
-    dayjs(timeframe.end).isSameOrBefore(allowedEndDate, "day")
-  );
-}
-
-async function getAllStations(): Promise<Station[]> {
-  const allStationsResponse = await axios.get<{ items: Station[] }>(
-    "https://booking.roadsurfer.com/api/en/stations?size=1000&enabled=1&sort_direction=asc&sort_by=name",
-    {
-      headers: {
-        ...defaultHeaders,
-        "X-Requested-Alias": "station.fetchAll",
-      },
-    }
-  );
-  writeFileConditional(
-    "out/stations.json",
-    JSON.stringify(allStationsResponse.data, null, 2)
-  );
-  const allStations = allStationsResponse.data?.items;
-  if (!allStations) {
-    throw new Error("No stations found");
-  }
-  return allStations;
-}
-
-async function getStartStationIds(allStations: Station[]) {
-  const startStationsResponse = await axios.get<number[]>(
-    "https://booking.roadsurfer.com/api/en/rally/startstations",
-    {
-      headers: {
-        ...defaultHeaders,
-        "X-Requested-Alias": "rally.startStations",
-      },
-    }
-  );
-  const startStationIds = startStationsResponse.data;
-  if (!startStationIds) {
-    throw new Error("No start stations found");
-  }
-
-  const startStations = startStationIds.map(
-    (id) => allStations.find((station) => station.id === id)?.name || "Unknown"
-  );
-  console.log("Start stations:", startStations.join(", "));
-  return startStationIds;
-}
-
-async function getAllRelations(
-  startStationIds: number[],
-  allStations: Station[]
-) {
-  let readableRelations: { [startStation: string]: Array<string> } = {};
-  let allRelations: { startStation: number; endStation: number }[] = [];
-
-  for (const startStationId of startStationIds) {
-    const startStationName = allStations.find(
-      (station) => station.id === startStationId
-    )?.name;
-    if (!startStationName) {
-      throw new Error("Start station not found");
-    }
-    const endStationsResponse = await axios.get<Array<number>>(
-      `https://booking.roadsurfer.com/api/en/rally/endstations?startStation=${startStationId}`,
-      {
-        headers: {
-          ...defaultHeaders,
-          "X-Requested-Alias": "rally.fetchRoutes",
-        },
-      }
-    );
-    const endStationIds = endStationsResponse.data;
-    endStationIds.forEach((endStationId) => {
-      allRelations.push({
-        startStation: startStationId,
-        endStation: endStationId,
-      });
-    });
-    const endStationNames = endStationIds.map(
-      (id) =>
-        allStations.find((station) => station.id === id)?.name || "Unknown"
-    );
-    readableRelations[startStationName] = endStationNames;
-  }
-  writeFileConditional(
-    "out/relations.json",
-    JSON.stringify(readableRelations, null, 2)
-  );
-  console.log("Total relations:", allRelations.length);
-
-  return allRelations;
+  await sendRelationsViaEmail(relationsFilteredByDate);
 }
 
 async function getMatchingDateRelations(
-  allRelations
-): Promise<RelationWithDate[]> {
-  const matchingRelations: RelationWithDate[] = [];
+  allRelations: Relation[]
+): Promise<RelationWithDates[]> {
+  const matchingRelations: RelationWithDates[] = [];
 
   for (const relation of allRelations) {
-    const timeframes = await dateRangesForRelation(
-      relation.startStation,
-      relation.endStation
-    );
-    for (const timeframe of timeframes) {
-      if (isDateMatch(timeframe)) {
-        matchingRelations.push({
-          startStation: relation.startStation,
-          endStation: relation.endStation,
-          timeWindow: {
-            startDate: timeframe.start.toISOString(),
-            endDate: timeframe.end.toISOString(),
-          },
-        });
-      }
-    }
+    const timeframes = await getDateRangesForRelation(relation);
   }
-  return matchingRelations;
+  const relationWithDatePromises = allRelations.map(getDateRangesForRelation);
+  const relationsWithDates = await Promise.all(relationWithDatePromises);
+  return relationsWithDates;
+}
+
+function getDateFilterTemp(): DateFilter {
+  return {
+    earliestStart: dayjs().add(1, "day").toDate(),
+    latestStart: dayjs().add(3, "day").toDate(),
+    earliestEnd: dayjs().add(3, "day").toDate(),
+    latestEnd: dayjs().add(10, "day").toDate(),
+  };
 }

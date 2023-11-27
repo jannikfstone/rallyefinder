@@ -14,14 +14,14 @@ export type Relation = {
   endStation: number;
 };
 
-export type RelationWithDate = {
+export type RelationWithDates = {
   startStation: number;
   endStation: number;
-  timeWindow: { startDate: string; endDate: string };
+  timeWindows: { startDate: Date; endDate: Date }[];
 };
 
 export type ReadableRelationWithDate = {
   startStation: string;
   endStation: string;
-  timeWindow: { startDate: string; endDate: string };
+  timeWindows: { startDate: string; endDate: string }[];
 };
