@@ -19,19 +19,18 @@ export function filterByDateRange(
   unfilteredRelations: RelationWithDates[],
   dateFilter: DateFilter
 ): RelationWithDates[] {
-  for (const relation of unfilteredRelations) {
-    const filteredTimeWindows = relation.timeWindows.filter((timeWindow) =>
-      isDateRangeMatchingFilter(
-        dateFilter,
-        timeWindow.startDate,
-        timeWindow.endDate
-      )
-    );
-    relation.timeWindows = filteredTimeWindows;
-  }
-  const filteredRelations = unfilteredRelations.filter(
-    (relation) => relation.timeWindows.length > 0
-  );
+  const filteredRelations = unfilteredRelations
+    .map((relation) => {
+      const filteredTimeWindows = relation.timeWindows.filter((timeWindow) =>
+        isDateRangeMatchingFilter(
+          dateFilter,
+          timeWindow.startDate,
+          timeWindow.endDate
+        )
+      );
+      return { ...relation, timeWindows: filteredTimeWindows };
+    })
+    .filter((relation) => relation.timeWindows.length > 0);
   return filteredRelations;
 }
 

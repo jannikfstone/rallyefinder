@@ -7,7 +7,8 @@
     "prebuild": "rm -rf dist",
     "build": "esbuild index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
     "postbuild": "cd dist && zip -r index.zip index.js*",
-    "deploy": "aws lambda update-function-code --function-name rally-scanner --zip-file fileb://dist/index.zip"
+    "deploy": "aws lambda update-function-code --function-name rally-scanner --zip-file fileb://dist/index.zip",
+    "test": "jest"
   },
   "author": "",
   "license": "ISC",
