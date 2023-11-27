@@ -1,6 +1,6 @@
 import { SES } from "@aws-sdk/client-ses";
 import { ReadableRelationWithDate, Relation, RelationWithDates } from "./types";
-import { emailRecipient } from "./config";
+import { emailRecipient } from "../config";
 import { requireEnv, writeFileConditional } from "./util";
 import { getAllStations } from "./relations";
 const ses = new SES({});

@@ -1,4 +1,4 @@
-import { requireEnv } from "./util";
+import { requireEnv } from "./src/util";
 
 export const allowedStartDate = new Date("2023-11-24");
 export const allowedEndDate = new Date("2023-12-30");

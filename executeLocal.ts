@@ -1,1 +1,1 @@
-import { handler } from ".";
+import { handler } from "./src";
