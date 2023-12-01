@@ -31,10 +31,7 @@ export type Station = {
   name: string;
   city: {
     id: string;
-    coordinates: {
-      latitude: number;
-      longitude: number;
-    };
+    coordinates: Coordinates;
     country: string;
     country_name: string;
     country_translated: string;
@@ -55,4 +52,9 @@ export type RelationWithDates = {
 
 export type ReadableRelationWithDate = Relation & {
   timeWindows: { startDate: string; endDate: string }[];
+};
+
+export type Coordinates = {
+  latitude: number;
+  longitude: number;
 };

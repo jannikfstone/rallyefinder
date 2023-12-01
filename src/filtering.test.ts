@@ -1,12 +1,22 @@
-import dayjs from "dayjs";
 import { RelationWithDates } from "./types";
-import { DateFilter, filterByDateRange } from "./filtering";
+import {
+  DateFilter,
+  LocationFilter,
+  filterByDateRange,
+  filterByLocation,
+} from "./filtering";
+import { getAllStations } from "./stationsService";
+
+jest.mock("./stationsService");
+const getAllStationsMock = getAllStations as jest.MockedFunction<
+  typeof getAllStations
+>;
 
 describe("Date Filter", () => {
   const availableRelations: RelationWithDates[] = [
     {
-      startStation: 1,
-      endStation: 2,
+      startStation: "1",
+      endStation: "2",
       timeWindows: [
         { startDate: new Date("2023-06-20"), endDate: new Date("2023-06-25") },
         { startDate: new Date("2023-06-21"), endDate: new Date("2023-06-24") },
@@ -94,5 +104,101 @@ describe("Date Filter", () => {
     };
     const filteredRelations = filterByDateRange(availableRelations, filter);
     expect(filteredRelations.length).toBe(0);
+  });
+});
+
+describe("RadiusFilter", () => {
+  /*
+   * Distances:
+   * 1 --> 2 13.7 km
+   * 1 --> 3 27,4 km
+   * 2 --> 3 13.7 km
+   *
+   */
+  const location1 = {
+    latitude: 52,
+    longitude: 10,
+  };
+  const location2 = {
+    latitude: 52,
+    longitude: 10.2,
+  };
+  const location3 = {
+    latitude: 52,
+    longitude: 10.4,
+  };
+  getAllStationsMock.mockResolvedValue([
+    {
+      id: "1",
+      city: {
+        coordinates: location1,
+        name: "City 1",
+        country: "DE",
+        country_name: "Germany",
+        country_translated: "Germany",
+        id: "1",
+      },
+      name: "City 1",
+    },
+    {
+      id: "2",
+      city: {
+        coordinates: location2,
+        name: "City 2",
+        country: "DE",
+        country_name: "Germany",
+        country_translated: "Germany",
+        id: "2",
+      },
+      name: "City 2",
+    },
+  ]);
+  const timeWindows = [
+    { startDate: new Date("2023-06-20"), endDate: new Date("2023-06-25") },
+    { startDate: new Date("2023-06-21"), endDate: new Date("2023-06-24") },
+  ];
+  it("Will not filter if start and end stations are in radius", async () => {
+    const filter: LocationFilter = {
+      start: { coordinates: location1 },
+      end: { coordinates: location2 },
+    };
+    const relations: RelationWithDates[] = [
+      { startStation: "1", endStation: "2", timeWindows },
+    ];
+    const filteredRelations = await filterByLocation(relations, filter);
+    expect(filteredRelations.length).toBe(1);
+  });
+  it("Will filter if start station is not in radius", async () => {
+    const filter: LocationFilter = {
+      start: { coordinates: { latitude: 0, longitude: 0 } },
+      end: { coordinates: location2 },
+    };
+    const relations: RelationWithDates[] = [
+      { startStation: "1", endStation: "2", timeWindows },
+    ];
+    const filteredRelations = await filterByLocation(relations, filter);
+    expect(filteredRelations.length).toBe(0);
+  });
+  it("Will filter if end station is not in radius", async () => {
+    const filter: LocationFilter = {
+      start: { coordinates: location1 },
+      end: { coordinates: { latitude: 0, longitude: 0 } },
+    };
+    const relations: RelationWithDates[] = [
+      { startStation: "1", endStation: "2", timeWindows },
+    ];
+    const filteredRelations = await filterByLocation(relations, filter);
+    expect(filteredRelations.length).toBe(0);
+  });
+  it("Will overwrite the default radius if radius is given", async () => {
+    const filter: LocationFilter = {
+      start: { coordinates: location3, radiusKm: 30 },
+      end: { coordinates: location2 },
+    };
+    const relations: RelationWithDates[] = [
+      { startStation: "1", endStation: "2", timeWindows },
+    ];
+    const filteredRelations = await filterByLocation(relations, filter);
+    expect(filteredRelations.length).toBe(1);
   });
 });

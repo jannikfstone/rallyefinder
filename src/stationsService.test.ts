@@ -7,4 +7,6 @@ describe("integration test", () => {
     fs.writeFileSync("out/allStationsTest.json", JSON.stringify(stations));
     expect(stations.length).toBeGreaterThan(0);
   }, 30000);
+
+  it.todo("Will not call the API if stations are cached");
 });
