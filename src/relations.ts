@@ -2,15 +2,14 @@ import axios, { all } from "axios";
 import { defaultHeaders } from ".";
 import { Relation, RelationWithDates, Station } from "./types";
 import { writeFileConditional } from "./util";
-
-let allStations: Station[] = [];
+import { getAllStations } from "./stationsService";
 
 export async function getAllRelations() {
   const allStations = await getAllStations();
 
   const startStationIds = await getStartStationIds(allStations);
   let readableRelations: { [startStation: string]: Array<string> } = {};
-  let allRelations: { startStation: number; endStation: number }[] = [];
+  let allRelations: Relation[] = [];
 
   for (const startStationId of startStationIds) {
     const startStationName = allStations.find(
@@ -28,7 +27,7 @@ export async function getAllRelations() {
         },
       }
     );
-    const endStationIds = endStationsResponse.data;
+    const endStationIds = endStationsResponse.data.map(toString);
     endStationIds.forEach((endStationId) => {
       allRelations.push({
         startStation: startStationId,
@@ -37,7 +36,8 @@ export async function getAllRelations() {
     });
     const endStationNames = endStationIds.map(
       (id) =>
-        allStations.find((station) => station.id === id)?.name || "Unknown"
+        allStations.find((station) => station.id === id.toString())?.name ||
+        "Unknown"
     );
     readableRelations[startStationName] = endStationNames;
   }
@@ -50,32 +50,7 @@ export async function getAllRelations() {
   return allRelations;
 }
 
-export async function getAllStations(): Promise<Station[]> {
-  if (allStations.length > 0) {
-    return allStations;
-  }
-  const allStationsResponse = await axios.get<{ items: Station[] }>(
-    "https://booking.roadsurfer.com/api/en/stations?size=1000&enabled=1&sort_direction=asc&sort_by=name",
-    {
-      headers: {
-        ...defaultHeaders,
-        "X-Requested-Alias": "station.fetchAll",
-      },
-    }
-  );
-  writeFileConditional(
-    "out/stations.json",
-    JSON.stringify(allStationsResponse.data, null, 2)
-  );
-  const retrievedStations = allStationsResponse.data?.items;
-  if (!retrievedStations) {
-    throw new Error("No stations found");
-  }
-  allStations = retrievedStations;
-  return retrievedStations;
-}
-
-async function getStartStationIds(allStations: Station[]) {
+async function getStartStationIds(allStations: Station[]): Promise<string[]> {
   const startStationsResponse = await axios.get<number[]>(
     "https://booking.roadsurfer.com/api/en/rally/startstations",
     {
@@ -85,7 +60,7 @@ async function getStartStationIds(allStations: Station[]) {
       },
     }
   );
-  const startStationIds = startStationsResponse.data;
+  const startStationIds = startStationsResponse.data.map(toString);
   if (!startStationIds) {
     throw new Error("No start stations found");
   }

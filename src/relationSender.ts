@@ -2,7 +2,7 @@ import { SES } from "@aws-sdk/client-ses";
 import { ReadableRelationWithDate, Relation, RelationWithDates } from "./types";
 import { emailRecipient } from "../config";
 import { requireEnv, writeFileConditional } from "./util";
-import { getAllStations } from "./relations";
+import { getAllStations } from "./stationsService";
 const ses = new SES({});
 
 export async function sendRelationsViaEmail(relations: RelationWithDates[]) {
@@ -28,27 +28,27 @@ export async function sendRelationsViaEmail(relations: RelationWithDates[]) {
   });
 }
 
-async function makeRelationsReadable(
-  relations: RelationWithDates[]
-): Promise<ReadableRelationWithDate[]> {
-  const allStations = await getAllStations();
-  const readableMatchingDateRelations = relations.map((relation) => ({
-    startStation:
-      allStations.find((station) => station.id === relation.startStation)
-        ?.name ?? "Unknown",
-    endStation:
-      allStations.find((station) => station.id === relation.endStation)?.name ??
-      "Unknown",
-    timeWindows: relation.timeWindows.map((timeWindow) => ({
-      startDate: timeWindow.startDate.toISOString(),
-      endDate: timeWindow.endDate.toISOString(),
-    })),
-  }));
+// async function makeRelationsReadable(
+//   relations: RelationWithDates[]
+// ): Promise<ReadableRelationWithDate[]> {
+//   const allStations = await getAllStations();
+//   const readableMatchingDateRelations = relations.map((relation) => ({
+//     startStation:
+//       allStations.find((station) => station.id === relation.startStation)
+//         ?.name ?? "Unknown",
+//     endStation:
+//       allStations.find((station) => station.id === relation.endStation)?.name ??
+//       "Unknown",
+//     timeWindows: relation.timeWindows.map((timeWindow) => ({
+//       startDate: timeWindow.startDate.toISOString(),
+//       endDate: timeWindow.endDate.toISOString(),
+//     })),
+//   }));
 
-  writeFileConditional(
-    "out/matchingRelationsByDate.json",
-    JSON.stringify(readableMatchingDateRelations, null, 2)
-  );
-  console.log("Found relations:", readableMatchingDateRelations.length);
-  return readableMatchingDateRelations;
-}
+//   writeFileConditional(
+//     "out/matchingRelationsByDate.json",
+//     JSON.stringify(readableMatchingDateRelations, null, 2)
+//   );
+//   console.log("Found relations:", readableMatchingDateRelations.length);
+//   return readableMatchingDateRelations;
+// }

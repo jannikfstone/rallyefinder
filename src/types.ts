@@ -1,4 +1,4 @@
-export type Station = {
+export type ApiStation = {
   id: number;
   name: string;
   city: {
@@ -9,19 +9,50 @@ export type Station = {
   };
 };
 
+export type ApiStationDetails = {
+  city: {
+    id: number;
+    name: string;
+    country: string;
+    country_name: string;
+    country_translated: string;
+  };
+  id: number;
+  address: string;
+  name: string;
+  timezone: string;
+  zip: string;
+  google_link: string;
+  one_way: boolean;
+};
+
+export type Station = {
+  id: string;
+  name: string;
+  city: {
+    id: string;
+    coordinates: {
+      latitude: number;
+      longitude: number;
+    };
+    country: string;
+    country_name: string;
+    country_translated: string;
+    name: string;
+  };
+};
+
 export type Relation = {
-  startStation: number;
-  endStation: number;
+  startStation: string;
+  endStation: string;
 };
 
 export type RelationWithDates = {
-  startStation: number;
-  endStation: number;
+  startStation: string;
+  endStation: string;
   timeWindows: { startDate: Date; endDate: Date }[];
 };
 
-export type ReadableRelationWithDate = {
-  startStation: string;
-  endStation: string;
+export type ReadableRelationWithDate = Relation & {
   timeWindows: { startDate: string; endDate: string }[];
 };
