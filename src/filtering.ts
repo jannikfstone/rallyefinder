@@ -5,7 +5,7 @@ import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 
 import { Coordinates, Relation, RelationWithDates, Station } from "./types";
-import { getAllStations } from "./stationsService";
+import { getAllRallyeStations } from "./stationsService";
 
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
@@ -53,7 +53,7 @@ export async function filterByLocation(
   unfilteredRelations: RelationWithDates[],
   locationFilter: LocationFilter
 ): Promise<RelationWithDates[]> {
-  const allStations = await getAllStations();
+  const allStations = await getAllRallyeStations();
   const filteredRelations = unfilteredRelations.filter((relation) => {
     return (
       isStationInRadius(

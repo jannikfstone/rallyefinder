@@ -2,7 +2,7 @@ import { SES } from "@aws-sdk/client-ses";
 import { ReadableRelationWithDate, Relation, RelationWithDates } from "./types";
 import { emailRecipient } from "../config";
 import { requireEnv, writeFileConditional } from "./util";
-import { getAllStations } from "./stationsService";
+import { getAllRallyeStations } from "./stationsService";
 const ses = new SES({});
 
 export async function sendRelationsViaEmail(relations: RelationWithDates[]) {

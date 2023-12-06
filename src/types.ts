@@ -17,6 +17,7 @@ export type ApiStationDetails = {
     country_name: string;
     country_translated: string;
   };
+  returns: number[];
   id: number;
   address: string;
   name: string;
@@ -37,6 +38,7 @@ export type Station = {
     country_translated: string;
     name: string;
   };
+  rallyeReturnStations: string[];
 };
 
 export type Relation = {

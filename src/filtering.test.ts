@@ -5,11 +5,11 @@ import {
   filterByDateRange,
   filterByLocation,
 } from "./filtering";
-import { getAllStations } from "./stationsService";
+import { getAllRallyeStations } from "./stationsService";
 
 jest.mock("./stationsService");
-const getAllStationsMock = getAllStations as jest.MockedFunction<
-  typeof getAllStations
+const getAllStationsMock = getAllRallyeStations as jest.MockedFunction<
+  typeof getAllRallyeStations
 >;
 
 describe("Date Filter", () => {

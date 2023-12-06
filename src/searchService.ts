@@ -30,7 +30,7 @@ export function createSearch(
 ): number {
   const currentId = idCounter;
   idCounter++;
-  const search = triggerSearch(dateFilter, locationFilter);
+  const search = doSearch(dateFilter, locationFilter);
 
   searches[currentId] = { search, searchState: "PENDING" };
   search
@@ -39,12 +39,12 @@ export function createSearch(
   return currentId;
 }
 
-async function triggerSearch(
+async function doSearch(
   dateFilter?: DateFilter,
   locationFilter?: LocationFilter
 ): Promise<RelationWithDates[]> {
   const allRelations = await getAllRelations();
-
+  console.log(`${allRelations.length} relations found`);
   const relationWithDatePromises = allRelations.map(getDateRangesForRelation);
   const relationsWithDates = await Promise.all(relationWithDatePromises);
   let filteredRelations = relationsWithDates;

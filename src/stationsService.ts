@@ -1,42 +1,52 @@
-import axios from "axios";
+import axios, { AxiosError, AxiosRequestConfig } from "axios";
+import axiosRetry from "axios-retry";
+
 import { defaultHeaders } from ".";
 import { ApiStation, ApiStationDetails, Station } from "./types";
-import { writeFileConditional } from "./util";
+import { onRetry, writeFileConditional } from "./util";
 import {
   GeoResponse,
   LocationNotFoundError,
   getCoordinates,
 } from "./locationService";
 
+axiosRetry(axios, {
+  retries: 3,
+  shouldResetTimeout: true,
+  onRetry,
+  retryCondition: (error) =>
+    error.code === "ECONNABORTED" || error.response?.status === 429,
+});
+
 export let allStations: Station[] = [];
 
-export async function getAllStations(): Promise<Station[]> {
+export async function getAllRallyeStations(): Promise<Station[]> {
   if (allStations.length > 0) {
     return allStations;
   }
-  const allStationsResponse = await axios.get<{ items: ApiStation[] }>(
-    "https://booking.roadsurfer.com/api/en/stations?size=1000&enabled=1&sort_direction=asc&sort_by=name",
+  const allStationsResponse = await axios.get<ApiStation[]>(
+    "https://booking.roadsurfer.com/api/en/rally/stations",
     {
       headers: {
         ...defaultHeaders,
-        "X-Requested-Alias": "station.fetchAll",
+        "X-Requested-Alias": "rally.startStations",
       },
+      timeout: 10000,
     }
   );
 
-  const retrievedStations = allStationsResponse.data?.items;
-  if (!retrievedStations) {
+  const retrievedStations = allStationsResponse.data;
+  if (retrievedStations.length === 0) {
     throw new Error("No stations found");
   }
   const domainStationPromises = retrievedStations.map(convertToDomainStation);
   allStations = await Promise.all(domainStationPromises);
 
-  writeFileConditional(
-    "out/stations.json",
-    JSON.stringify(allStationsResponse.data, null, 2)
+  const rallyeStations = allStations.filter(
+    (station) => station.rallyeReturnStations.length > 0
   );
-
-  return allStations;
+  writeFileConditional("stations.json", rallyeStations);
+  return rallyeStations;
 }
 
 async function convertToDomainStation(station: ApiStation): Promise<Station> {
@@ -56,22 +66,31 @@ async function convertToDomainStation(station: ApiStation): Promise<Station> {
         longitude: geoResponse.longitude,
       },
     },
+    rallyeReturnStations: stationDetails.returns.map((id) => id.toString()),
   };
 }
 
 async function getStationDetails(
   stationId: string
 ): Promise<ApiStationDetails> {
-  const stationDetailsResponse = await axios.get<ApiStationDetails>(
-    `https://booking.roadsurfer.com/api/en/stations/${stationId}`,
-    {
-      headers: {
-        ...defaultHeaders,
-        "X-Requested-Alias": "station.get",
-      },
+  try {
+    const stationDetailsResponse = await axios.get<ApiStationDetails>(
+      `https://booking.roadsurfer.com/api/en/rally/stations/${stationId}`,
+      {
+        headers: {
+          ...defaultHeaders,
+          "X-Requested-Alias": "rally.fetchRoutes",
+        },
+        timeout: 3000,
+      }
+    );
+    return stationDetailsResponse.data;
+  } catch (error) {
+    if (error instanceof AxiosError && error.code === "ECONNABORTED") {
+      console.error("Timeout receiving details of station ", stationId);
     }
-  );
-  return stationDetailsResponse.data;
+    throw error;
+  }
 }
 
 async function getLocationWithRetry(

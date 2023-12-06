@@ -1,0 +1,2 @@
+- Use consistent axios client in all services that retries and has 3s timeout
+- Malformatted search requests

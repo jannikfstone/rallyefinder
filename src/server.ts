@@ -37,6 +37,7 @@ app.post("/rallyefinder/search", (request, response) => {
   response.send({ searchId });
 });
 
+//TODO: Times out if GET 0 sent before creating search
 app.get("/rallyefinder/search/:id", async (request, response) => {
   try {
     const searchId = parseInt(request.params.id);
@@ -49,29 +50,14 @@ app.get("/rallyefinder/search/:id", async (request, response) => {
       response.send({ searchState: search.searchState });
       return;
     }
-    response.send(search);
+    const searchResult = await search.search;
+    response.send({ searchState: search.searchState, result: searchResult });
   } catch (error) {
     if (Error instanceof SearchNotFoundError) {
       response.status(404).send("No search found with given id");
     }
   }
 });
-/*POST /rallyefinder/search
-RETURN search ID
-
-GET /rallyefinder/search/id
-RETURN 200
-{
-  id: searchId
-  status: SUCCESS | ERROR | PENDING
-  result: {           //Only set if search is in status success
-    RelationWithDates
-  }
-}
-RETURN 404 if search id cannot be found
-
-Needs DB
-*/
 
 // TODO: Handle incomplete filters, handle malformatted filters
 //possible malformattings: malformatted date, extra symbols in coordinates (like spaces), type mismatches (string instead of number for distance)
