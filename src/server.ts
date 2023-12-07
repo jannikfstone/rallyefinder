@@ -53,7 +53,7 @@ app.get("/rallyefinder/search/:id", async (request, response) => {
     const searchResult = await search.search;
     response.send({ searchState: search.searchState, result: searchResult });
   } catch (error) {
-    if (Error instanceof SearchNotFoundError) {
+    if (error instanceof SearchNotFoundError) {
       response.status(404).send("No search found with given id");
     }
   }

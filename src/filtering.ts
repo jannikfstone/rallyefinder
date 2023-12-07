@@ -4,8 +4,8 @@ import { getDistance } from "geolib";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 
-import { Coordinates, Relation, RelationWithDates, Station } from "./types";
-import { getAllRallyeStations } from "./stationsService";
+import { Coordinates, RelationWithDates, Station } from "./types";
+import { getAllStations } from "./stationsService";
 
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
@@ -28,7 +28,7 @@ export type LocationFilter = {
   };
 };
 
-const DEFAULT_FILTER_RADUIS_KM = 15;
+const DEFAULT_FILTER_RADUIS_KM = 30;
 
 export function filterByDateRange(
   unfilteredRelations: RelationWithDates[],
@@ -53,7 +53,7 @@ export async function filterByLocation(
   unfilteredRelations: RelationWithDates[],
   locationFilter: LocationFilter
 ): Promise<RelationWithDates[]> {
-  const allStations = await getAllRallyeStations();
+  const allStations = await getAllStations();
   const filteredRelations = unfilteredRelations.filter((relation) => {
     return (
       isStationInRadius(

@@ -69,6 +69,9 @@ export function getSearch(id: number): Search {
 }
 
 function searchSuccess(searchId: number, searchResult: RelationWithDates[]) {
+  console.log(
+    `Search ${searchId} complete. Found ${searchResult.length} relations`
+  );
   searches[searchId].searchState = "SUCCESS";
 }
 function searchFail(searchId: number, searchResult: RelationWithDates[]) {

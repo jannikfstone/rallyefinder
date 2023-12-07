@@ -20,7 +20,7 @@ axiosRetry(axios, {
 
 export let allStations: Station[] = [];
 
-export async function getAllRallyeStations(): Promise<Station[]> {
+export async function getAllStations(): Promise<Station[]> {
   if (allStations.length > 0) {
     return allStations;
   }
@@ -42,10 +42,15 @@ export async function getAllRallyeStations(): Promise<Station[]> {
   const domainStationPromises = retrievedStations.map(convertToDomainStation);
   allStations = await Promise.all(domainStationPromises);
 
+  writeFileConditional("stations.json", allStations);
+  return allStations;
+}
+
+export async function getAllRallyeStations(): Promise<Station[]> {
+  const allStations = await getAllStations();
   const rallyeStations = allStations.filter(
     (station) => station.rallyeReturnStations.length > 0
   );
-  writeFileConditional("stations.json", rallyeStations);
   return rallyeStations;
 }
 
