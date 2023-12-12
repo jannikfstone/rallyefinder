@@ -9,7 +9,9 @@
     "postbuild": "cd dist && zip -r index.zip index.js*",
     "deploy": "cdk deploy --require-approval never",
     "destroy": "cdk destroy --force",
-    "test": "jest",
+    "test": "jest ./test/unit",
+    "test:all": "jest ./test/unit",
+    "test:integration": "jest ./test/integration",
     "dev": "nodemon src/server.ts --verbose"
   },
   "author": "",

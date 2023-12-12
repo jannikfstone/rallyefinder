@@ -1,4 +1,4 @@
-import { getAllRallyeStations } from "./stationsService";
+import { getAllRallyeStations } from "../../src/stationsService";
 import fs from "fs";
 
 describe("integration test", () => {

@@ -1,15 +1,15 @@
-import { RelationWithDates } from "./types";
+import { RelationWithDates } from "../../src/types";
 import {
   DateFilter,
   LocationFilter,
   filterByDateRange,
   filterByLocation,
-} from "./filtering";
-import { getAllRallyeStations } from "./stationsService";
+} from "../../src/filtering";
+import { getAllStations } from "../../src/stationsService";
 
-jest.mock("./stationsService");
-const getAllStationsMock = getAllRallyeStations as jest.MockedFunction<
-  typeof getAllRallyeStations
+jest.mock("../../src/stationsService");
+const getAllStationsMock = getAllStations as jest.MockedFunction<
+  typeof getAllStations
 >;
 
 describe("Date Filter", () => {
@@ -139,6 +139,7 @@ describe("RadiusFilter", () => {
         id: "1",
       },
       name: "City 1",
+      rallyeReturnStations: ["2"],
     },
     {
       id: "2",
@@ -151,6 +152,7 @@ describe("RadiusFilter", () => {
         id: "2",
       },
       name: "City 2",
+      rallyeReturnStations: ["3"],
     },
   ]);
   const timeWindows = [
