@@ -1,10 +1,6 @@
-import express from "express";
-import dotenv from "dotenv";
-
-import { SearchNotFoundError, createSearch, getSearch } from "./searchService";
 import { DateFilter, LocationFilter } from "./filtering";
-
-dotenv.config();
+import { SearchNotFoundError, createSearch, getSearch } from "./searchService";
+import { RelationWithDates, SearchState } from "./types";
 
 type SearchBody = {
   earliestStartDate?: string;
@@ -17,50 +13,26 @@ type SearchBody = {
   endLocationRadius?: number;
 };
 
-const app = express();
-const port = 8080;
-
-app.listen(port);
-app.use(express.json());
-app.use((request, response, next) => {
-  console.log(`Received ${request.method} ${request.path}`);
-  next();
-});
-
-console.log("Listening");
-app.post("/rallyefinder/search", (request, response) => {
-  const searchFilters = getSearchFilters(request.body);
+export function processPostSearch(body: SearchBody): number {
+  const searchFilters = getSearchFilters(body);
   const searchId = createSearch(
     searchFilters.dateFilter,
     searchFilters.locationFilter
   );
-  response.send({ searchId });
-});
+  return searchId;
+}
 
-//TODO: Times out if GET 0 sent before creating search
-app.get("/rallyefinder/search/:id", async (request, response) => {
-  try {
-    const searchId = parseInt(request.params.id);
-    if (Number.isNaN(searchId)) {
-      response.status(400).send("Malformed id");
-      return;
-    }
-    const search = getSearch(searchId);
-    if (search.searchState !== "SUCCESS") {
-      response.send({ searchState: search.searchState });
-      return;
-    }
-    const searchResult = await search.search;
-    response.send({ searchState: search.searchState, result: searchResult });
-  } catch (error) {
-    if (error instanceof SearchNotFoundError) {
-      response.status(404).send("No search found with given id");
-    }
+export async function processGetSearch(
+  id: number
+): Promise<{ searchState: SearchState; result?: RelationWithDates[] }> {
+  const search = getSearch(id);
+  if (search.searchState !== "SUCCESS") {
+    return { searchState: search.searchState };
   }
-});
+  const searchResult = await search.search;
+  return { searchState: search.searchState, result: searchResult };
+}
 
-// TODO: Handle incomplete filters, handle malformatted filters
-//possible malformattings: malformatted date, extra symbols in coordinates (like spaces), type mismatches (string instead of number for distance)
 function getSearchFilters(searchBody: SearchBody): {
   dateFilter?: DateFilter;
   locationFilter?: LocationFilter;

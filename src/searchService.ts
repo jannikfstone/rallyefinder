@@ -5,7 +5,7 @@ import {
   filterByLocation,
 } from "./filtering";
 import { getAllRelations, getDateRangesForRelation } from "./relations";
-import { RelationWithDates } from "./types";
+import { RelationWithDates, SearchState } from "./types";
 
 export class SearchNotFoundError extends Error {
   public searchId: number;
@@ -14,8 +14,8 @@ export class SearchNotFoundError extends Error {
     this.searchId = searchId;
   }
 }
-type Search = {
-  searchState: "PENDING" | "ERROR" | "SUCCESS";
+export type Search = {
+  searchState: SearchState;
   search: Promise<RelationWithDates[]>;
 };
 const searches: {

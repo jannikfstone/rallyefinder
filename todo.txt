@@ -1,4 +1,8 @@
+- Separate tests into integration and unit so github can run tests staged
 - Use consistent axios client in all services that retries and has 3s timeout
 - Malformatted search requests
 - cache geolocations to reduce unnecessary geocoding api calls
 - because of new API that contains relations in station details, we should not cache the station details endlessly anymore. Relations could have been booked in the meantime
+- Use APIGateway for cleaner path parameter implementation
+- Replace local search storage (bad practice and not working with lambda)
+- Introduce API key for public deployments

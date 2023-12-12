@@ -60,3 +60,5 @@ export type Coordinates = {
   latitude: number;
   longitude: number;
 };
+
+export type SearchState = "PENDING" | "ERROR" | "SUCCESS";

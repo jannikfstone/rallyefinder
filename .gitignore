@@ -3,3 +3,11 @@ dist
 out
 .env
 .vscode
+
+*.js
+!jest.config.js
+*.d.ts
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
