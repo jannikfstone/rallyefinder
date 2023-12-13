@@ -12,7 +12,7 @@
     "test": "jest ./test/unit",
     "test:all": "jest ./test/unit",
     "test:integration": "jest ./test/integration",
-    "dev": "nodemon src/server.ts --verbose"
+    "dev": "nodemon src/servers/expressServer.ts --verbose"
   },
   "author": "",
   "license": "ISC",

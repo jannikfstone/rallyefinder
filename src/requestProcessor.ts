@@ -13,13 +13,13 @@ type SearchBody = {
   endLocationRadius?: number;
 };
 
-export function processPostSearch(body: SearchBody): number {
+export function processPostSearch(body: SearchBody): { searchId: number } {
   const searchFilters = getSearchFilters(body);
   const searchId = createSearch(
     searchFilters.dateFilter,
     searchFilters.locationFilter
   );
-  return searchId;
+  return { searchId };
 }
 
 export async function processGetSearch(

@@ -47,5 +47,6 @@ async function handlePost(event: APIGatewayEvent) {
         body: "No search found with given id",
       };
     }
+    throw error;
   }
 }
