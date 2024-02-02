@@ -58,3 +58,9 @@ You can destroy the app by running `npm run destroy`.
 
 The environment variable `S3_BUCKET_NAME` must be set to an arbitrary bucket name you want to use as a storage for the API.
 This bucket will be created automatically during the deployment so make sure it does not exist already.
+
+**Optionally**, you can deploy the API under a custom domain name.
+To do this, set the environment variables `DOMAIN_ZONE` and `CERTIFICATE_ARN`.
+`DOMAIN_ZONE` will define the parent domain that is used and prefixed with `rallyefinder.`.
+For example, if you provide `mydomain.com`, the API will be deployed under `rallyefinder.mydomain.com`.
+`CERTIFICATE_ARN` must point to a certificate in the AWS certificate manager which covers the API domain.

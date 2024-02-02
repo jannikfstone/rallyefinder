@@ -4,6 +4,9 @@ import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";
 import { requireEnv } from "../../src/util";
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
+import { ARecord, HostedZone } from "aws-cdk-lib/aws-route53";
+import { ApiGateway } from "aws-cdk-lib/aws-route53-targets";
 
 export class API extends Resource {
   handlerFunction: NodejsFunction;
@@ -32,5 +35,35 @@ export class API extends Resource {
     const searchItem = search.addResource("{id}");
     searchItem.addMethod("GET");
     search.addMethod("POST");
+    this.getApiDomainOptions();
+  }
+
+  private getApiDomainOptions() {
+    if (!process.env.DOMAIN_ZONE || !process.env.CERTIFICATE_ARN) {
+      console.log(
+        "No custom domain name or certificate ARN provided. Skipping custom domain setup."
+      );
+      return undefined;
+    }
+    const parentDomainName = requireEnv("DOMAIN_ZONE");
+    const apiDomainName = `rallyefinder.${parentDomainName}`;
+    const domainCertificate = Certificate.fromCertificateArn(
+      this,
+      "DomainCertificate",
+      requireEnv("CERTIFICATE_ARN")
+    );
+    this.gateway.addDomainName("CustomDomain", {
+      domainName: apiDomainName,
+      certificate: domainCertificate,
+    });
+    const hostedZone = HostedZone.fromLookup(this, "HostedZone", {
+      domainName: parentDomainName,
+    });
+    const gatewayTarget = new ApiGateway(this.gateway);
+    new ARecord(this, "ApiARecord", {
+      zone: hostedZone,
+      target: { aliasTarget: gatewayTarget },
+      recordName: apiDomainName,
+    });
   }
 }
