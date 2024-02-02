@@ -1,46 +1,30 @@
-import { DateFilter, LocationFilter } from "./filtering";
-import { SearchNotFoundError, createSearch, getSearch } from "./searchService";
-import { RelationWithDates, SearchState } from "./types";
+import {
+  DateFilter,
+  LocationFilter,
+  PostSearchBody,
+  Search,
+  SearchFilters,
+} from "./types";
+import { SearchService } from "./SearchService";
 
-type SearchBody = {
-  earliestStartDate?: string;
-  latestStartDate?: string;
-  earliestEndDate?: string;
-  latestEndDate?: string;
-  startLocation?: string;
-  startLocationRadius?: number;
-  endLocation?: string;
-  endLocationRadius?: number;
-};
+const searchService = new SearchService();
 
-export function processPostSearch(body: SearchBody): { searchId: number } {
+export async function processPostSearch(body: PostSearchBody): Promise<string> {
   const searchFilters = getSearchFilters(body);
-  const searchId = createSearch(
+  const searchId = await searchService.createSearch(
     searchFilters.dateFilter,
     searchFilters.locationFilter
   );
-  return { searchId };
+  await searchService.triggerSearchRun(searchId);
+  return searchId;
 }
 
-export async function processGetSearch(
-  id: number
-): Promise<{ searchState: SearchState; result?: RelationWithDates[] }> {
-  const search = getSearch(id);
-  if (search.searchState !== "SUCCESS") {
-    return { searchState: search.searchState };
-  }
-  const searchResult = await search.search;
-  return { searchState: search.searchState, result: searchResult };
+export async function processGetSearch(id: string): Promise<Search> {
+  return await searchService.getSearch(id);
 }
 
-function getSearchFilters(searchBody: SearchBody): {
-  dateFilter?: DateFilter;
-  locationFilter?: LocationFilter;
-} {
-  const returnObj: {
-    dateFilter?: DateFilter;
-    locationFilter?: LocationFilter;
-  } = {};
+function getSearchFilters(searchBody: PostSearchBody): SearchFilters {
+  const returnObj: SearchFilters = {};
   if (
     searchBody.earliestStartDate &&
     searchBody.latestStartDate &&
@@ -53,6 +37,7 @@ function getSearchFilters(searchBody: SearchBody): {
       earliestStart: new Date(searchBody.earliestStartDate),
       latestStart: new Date(searchBody.latestStartDate),
     };
+    console.log("Date filter: ", returnObj.dateFilter);
   }
 
   if (searchBody.startLocation && searchBody.endLocation) {
@@ -74,6 +59,7 @@ function getSearchFilters(searchBody: SearchBody): {
         radiusKm: searchBody.startLocationRadius,
       },
     };
+    console.log("Location filter: ", returnObj.locationFilter);
   }
   return returnObj;
 }

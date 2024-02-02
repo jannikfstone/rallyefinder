@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 
-import { SearchNotFoundError } from "../searchService";
+import { SearchNotFoundError } from "../SearchService";
 import { processGetSearch, processPostSearch } from "../requestProcessor";
 
 dotenv.config();
@@ -17,17 +17,18 @@ app.use((request, response, next) => {
 });
 
 console.log("Listening");
-app.post("/rallyefinder/search", (req, res) => {
-  const response = processPostSearch(req.body);
-  res.send(response);
+app.post("/rallyefinder/search", async (req, res) => {
+  try {
+    const searchId = await processPostSearch(req.body);
+    res.send({ searchId });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal server error");
+  }
 });
 
 app.get("/rallyefinder/search/:id", async (req, res) => {
-  const searchId = parseInt(req.params.id);
-  if (Number.isNaN(searchId)) {
-    res.status(400).send("Malformed id");
-    return;
-  }
+  const searchId = req.params.id;
   try {
     const result = await processGetSearch(searchId);
     res.send(result);
@@ -36,6 +37,8 @@ app.get("/rallyefinder/search/:id", async (req, res) => {
     if (error instanceof SearchNotFoundError) {
       res.status(404).send("No search found with given id");
     }
+    console.log(error);
+    res.status(500).send("Internal server error");
   }
 });
 

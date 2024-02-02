@@ -15,7 +15,7 @@ The API currently has 2 endpoints: One for triggering a new search and one for r
 
 #### New search
 
-You can trigger a search by calling POST `/rallyfinder/search`.
+You can trigger a search by calling POST `/rallyefinder/search`.
 Filters must be sent in the POST body following this schema:
 
 ```
@@ -55,4 +55,6 @@ If the search is in state "SUCCESS" you will additionally get the search results
 Automatic deployment to AWS lambda is working if you have an account that is enabled for AWS-CDK.
 You can deploy by setting the environment variable `CDK_DEFAULT_ACCOUNT` to the target account and running `npm run deploy`.
 You can destroy the app by running `npm run destroy`.
-Note however, that currently the code deployed to a lambda function does not work because the API stores search results in-memory which is incompatible with the lambda architecture.
+
+The environment variable `S3_BUCKET_NAME` must be set to an arbitrary bucket name you want to use as a storage for the API.
+This bucket will be created automatically during the deployment so make sure it does not exist already.

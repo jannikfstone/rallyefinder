@@ -4,29 +4,17 @@ import { getDistance } from "geolib";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 
-import { Coordinates, RelationWithDates, Station } from "./types";
+import {
+  Coordinates,
+  DateFilter,
+  LocationFilter,
+  RelationWithDates,
+  Station,
+} from "./types";
 import { getAllStations } from "./stationsService";
 
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
-
-export type DateFilter = {
-  earliestStart: Date;
-  latestStart: Date;
-  earliestEnd: Date;
-  latestEnd: Date;
-};
-
-export type LocationFilter = {
-  start: {
-    coordinates: Coordinates;
-    radiusKm?: number;
-  };
-  end: {
-    coordinates: Coordinates;
-    radiusKm?: number;
-  };
-};
 
 const DEFAULT_FILTER_RADUIS_KM = 30;
 

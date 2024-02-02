@@ -5,7 +5,7 @@ import { requireEnv, writeFileConditional } from "./util";
 import { getAllRallyeStations } from "./stationsService";
 const ses = new SES({});
 
-export async function sendRelationsViaEmail(relations: RelationWithDates[]) {
+export async function sendRelationsViaEmail(relations: SearchResults) {
   //Send an email to the given senders using SES client
 
   const sendResult = await ses.sendEmail({

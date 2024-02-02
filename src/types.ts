@@ -62,3 +62,45 @@ export type Coordinates = {
 };
 
 export type SearchState = "PENDING" | "ERROR" | "SUCCESS";
+
+export type SearchResults = RelationWithDates[];
+
+export type Search = {
+  searchState: SearchState;
+  searchResult: SearchResults | null;
+  searchFilters: SearchFilters;
+};
+
+export type SearchFilters = {
+  dateFilter?: DateFilter;
+  locationFilter?: LocationFilter;
+};
+
+export type DateFilter = {
+  earliestStart: Date;
+  latestStart: Date;
+  earliestEnd: Date;
+  latestEnd: Date;
+};
+
+export type LocationFilter = {
+  start: {
+    coordinates: Coordinates;
+    radiusKm?: number;
+  };
+  end: {
+    coordinates: Coordinates;
+    radiusKm?: number;
+  };
+};
+
+export type PostSearchBody = {
+  earliestStartDate?: string;
+  latestStartDate?: string;
+  earliestEndDate?: string;
+  latestEndDate?: string;
+  startLocation?: string;
+  startLocationRadius?: number;
+  endLocation?: string;
+  endLocationRadius?: number;
+};

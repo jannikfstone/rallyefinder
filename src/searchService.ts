@@ -1,79 +1,68 @@
-import {
-  DateFilter,
-  LocationFilter,
-  filterByDateRange,
-  filterByLocation,
-} from "./filtering";
-import { getAllRelations, getDateRangesForRelation } from "./relations";
-import { RelationWithDates, SearchState } from "./types";
+import { randomUUID } from "crypto";
+import { DateFilter, LocationFilter, Search } from "./types";
+import { StorageService } from "./StorageService";
+import { requireEnv } from "./util";
+import { Lambda } from "@aws-sdk/client-lambda";
+import { SearchWorker } from "./SearchWorker";
 
 export class SearchNotFoundError extends Error {
-  public searchId: number;
-  constructor(searchId: number) {
+  public searchId: string;
+  constructor(searchId: string) {
     super();
     this.searchId = searchId;
   }
 }
-export type Search = {
-  searchState: SearchState;
-  search: Promise<RelationWithDates[]>;
-};
-const searches: {
-  [id: number]: Search;
-} = {};
 
-let idCounter = 0;
-
-export function createSearch(
-  dateFilter?: DateFilter,
-  locationFilter?: LocationFilter
-): number {
-  const currentId = idCounter;
-  idCounter++;
-  const search = doSearch(dateFilter, locationFilter);
-
-  searches[currentId] = { search, searchState: "PENDING" };
-  search
-    .then((searchResult) => searchSuccess(currentId, searchResult))
-    .catch((err) => searchFail(currentId, err));
-  return currentId;
-}
-
-async function doSearch(
-  dateFilter?: DateFilter,
-  locationFilter?: LocationFilter
-): Promise<RelationWithDates[]> {
-  const allRelations = await getAllRelations();
-  console.log(`${allRelations.length} relations found`);
-  const relationWithDatePromises = allRelations.map(getDateRangesForRelation);
-  const relationsWithDates = await Promise.all(relationWithDatePromises);
-  let filteredRelations = relationsWithDates;
-  if (dateFilter) {
-    filteredRelations = filterByDateRange(filteredRelations, dateFilter);
+export class SearchService {
+  searches: {
+    [id: number]: Search;
+  } = {};
+  storageService: StorageService;
+  searchWorker: SearchWorker;
+  lambda: Lambda;
+  constructor() {
+    this.storageService = new StorageService();
+    this.lambda = new Lambda({});
+    this.searchWorker = new SearchWorker();
   }
-  if (locationFilter) {
-    filteredRelations = await filterByLocation(
-      filteredRelations,
-      locationFilter
-    );
-  }
-  return filteredRelations;
-}
 
-export function getSearch(id: number): Search {
-  const search = searches[id];
-  if (!search) {
-    throw new SearchNotFoundError(id);
-  }
-  return search;
-}
+  async createSearch(
+    dateFilter?: DateFilter,
+    locationFilter?: LocationFilter
+  ): Promise<string> {
+    const currentId = randomUUID();
+    console.log(`Creating search with id ${currentId}`);
 
-function searchSuccess(searchId: number, searchResult: RelationWithDates[]) {
-  console.log(
-    `Search ${searchId} complete. Found ${searchResult.length} relations`
-  );
-  searches[searchId].searchState = "SUCCESS";
-}
-function searchFail(searchId: number, searchResult: RelationWithDates[]) {
-  searches[searchId].searchState = "ERROR";
+    await this.storageService.save(currentId, {
+      searchResult: null,
+      searchState: "PENDING",
+      searchFilters: {
+        dateFilter,
+        locationFilter,
+      },
+    });
+    console.log(`Search with id ${currentId} created`);
+    return currentId;
+  }
+
+  async triggerSearchRun(searchId: string): Promise<void> {
+    if (process.env.IS_PRODUCTION === "true") {
+      const searchExecutorArn = requireEnv("SEARCH_EXECUTOR_ARN");
+      await this.lambda.invoke({
+        FunctionName: searchExecutorArn,
+        Payload: JSON.stringify({ searchId }),
+        InvocationType: "Event",
+      });
+      return;
+    }
+    this.searchWorker.runSearch(searchId);
+  }
+
+  async getSearch(id: string): Promise<Search> {
+    const search = await this.storageService.load(id);
+    if (!search) {
+      throw new SearchNotFoundError(id);
+    }
+    return search;
+  }
 }
