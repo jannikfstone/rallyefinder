@@ -30,8 +30,7 @@ export class API extends Resource {
       handler: this.handlerFunction,
       proxy: false,
     });
-    const rallyefinder = this.gateway.root.addResource("rallyefinder");
-    const search = rallyefinder.addResource("search");
+    const search = this.gateway.root.addResource("search");
     const searchItem = search.addResource("{id}");
     searchItem.addMethod("GET");
     search.addMethod("POST");

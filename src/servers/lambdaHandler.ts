@@ -8,10 +8,10 @@ import { SearchNotFoundError } from "../SearchService";
 import { PostSearchBody } from "../types";
 
 export async function handler(event: APIGatewayEvent) {
-  if (event.resource === "/rallyefinder/search/{id}") {
+  if (event.resource === "/search/{id}") {
     return await handleGet(event);
   }
-  if (event.resource === "/rallyefinder/search") {
+  if (event.resource === "/search") {
     return await handlePost(event);
   }
 }

@@ -17,7 +17,7 @@ app.use((request, response, next) => {
 });
 
 console.log("Listening");
-app.post("/rallyefinder/search", async (req, res) => {
+app.post("/search", async (req, res) => {
   try {
     const searchId = await processPostSearch(req.body);
     res.send({ searchId });
@@ -27,7 +27,7 @@ app.post("/rallyefinder/search", async (req, res) => {
   }
 });
 
-app.get("/rallyefinder/search/:id", async (req, res) => {
+app.get("/search/:id", async (req, res) => {
   const searchId = req.params.id;
   try {
     const result = await processGetSearch(searchId);
