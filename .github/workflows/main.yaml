@@ -8,11 +8,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
       - run: npm ci
       - run: npm test
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
       - run: npm run deploy
         env:
           API_NINJAS_KEY: ${{ secrets.API_NINJAS_KEY }}
