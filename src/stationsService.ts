@@ -20,6 +20,12 @@ axiosRetry(axios, {
 
 export let allStations: Station[] = [];
 
+export class StationNotFoundError extends Error {
+  constructor(stationId: string) {
+    super(`Station with id ${stationId} not found`);
+  }
+}
+
 export async function getAllStations(): Promise<Station[]> {
   if (allStations.length > 0) {
     return allStations;
@@ -75,7 +81,7 @@ async function convertToDomainStation(station: ApiStation): Promise<Station> {
   };
 }
 
-async function getStationDetails(
+export async function getStationDetails(
   stationId: string
 ): Promise<ApiStationDetails> {
   try {
@@ -91,8 +97,13 @@ async function getStationDetails(
     );
     return stationDetailsResponse.data;
   } catch (error) {
-    if (error instanceof AxiosError && error.code === "ECONNABORTED") {
-      console.error("Timeout receiving details of station ", stationId);
+    if (error instanceof AxiosError) {
+      if (error.code === "ECONNABORTED") {
+        console.error("Timeout receiving details of station ", stationId);
+      }
+      if (error.status === 404) {
+        throw new StationNotFoundError(stationId);
+      }
     }
     throw error;
   }

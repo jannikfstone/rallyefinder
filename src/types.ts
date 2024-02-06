@@ -99,8 +99,8 @@ export type PostSearchBody = {
   latestStartDate?: string;
   earliestEndDate?: string;
   latestEndDate?: string;
-  startLocation?: string;
+  startLocation?: Coordinates;
   startLocationRadius?: number;
-  endLocation?: string;
+  endLocation?: Coordinates;
   endLocationRadius?: number;
 };

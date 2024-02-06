@@ -29,11 +29,15 @@ export class API extends Resource {
     this.gateway = new LambdaRestApi(this, "API", {
       handler: this.handlerFunction,
       proxy: false,
+      cloudWatchRole: true,
     });
     const search = this.gateway.root.addResource("search");
     const searchItem = search.addResource("{id}");
     searchItem.addMethod("GET");
     search.addMethod("POST");
+    const stations = this.gateway.root.addResource("stations");
+    const station = stations.addResource("{id}");
+    station.addMethod("GET");
     this.getApiDomainOptions();
   }
 

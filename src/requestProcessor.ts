@@ -1,11 +1,6 @@
-import {
-  DateFilter,
-  LocationFilter,
-  PostSearchBody,
-  Search,
-  SearchFilters,
-} from "./types";
+import { PostSearchBody, Search, SearchFilters } from "./types";
 import { SearchService } from "./SearchService";
+import { getStationDetails } from "./stationsService";
 
 const searchService = new SearchService();
 
@@ -21,6 +16,13 @@ export async function processPostSearch(body: PostSearchBody): Promise<string> {
 
 export async function processGetSearch(id: string): Promise<Search> {
   return await searchService.getSearch(id);
+}
+
+export async function processGetStation(id: string) {
+  console.log("Getting station details for id: ", id);
+  const stationDetails = await getStationDetails(id);
+  console.log("Details for station ", id, ": ", stationDetails);
+  return { name: stationDetails.name };
 }
 
 function getSearchFilters(searchBody: PostSearchBody): SearchFilters {
@@ -40,22 +42,19 @@ function getSearchFilters(searchBody: PostSearchBody): SearchFilters {
     console.log("Date filter: ", returnObj.dateFilter);
   }
 
-  if (searchBody.startLocation && searchBody.endLocation) {
-    const startCoordinatesSplit = searchBody.startLocation.split(",");
-    const endCoordinatesSplit = searchBody.endLocation.split(",");
+  if (
+    searchBody.startLocation?.latitude &&
+    searchBody.startLocation?.longitude &&
+    searchBody.endLocation?.latitude &&
+    searchBody.endLocation?.longitude
+  ) {
     returnObj.locationFilter = {
       end: {
-        coordinates: {
-          latitude: parseFloat(endCoordinatesSplit[0]),
-          longitude: parseFloat(endCoordinatesSplit[1]),
-        },
+        coordinates: searchBody.endLocation,
         radiusKm: searchBody.endLocationRadius,
       },
       start: {
-        coordinates: {
-          latitude: parseFloat(startCoordinatesSplit[0]),
-          longitude: parseFloat(startCoordinatesSplit[1]),
-        },
+        coordinates: searchBody.startLocation,
         radiusKm: searchBody.startLocationRadius,
       },
     };
