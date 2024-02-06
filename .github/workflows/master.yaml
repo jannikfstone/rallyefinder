@@ -1,0 +1,21 @@
+name: deploy
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+      - run: npm ci
+      - run: npm test
+      - run: npm run deploy
+        env:
+          API_NINJAS_KEY: ${{ secrets.API_NINJAS_KEY }}
+          S3_BUCKET_NAME: ${{ vars.S3_BUCKET_NAME }}
+          DOMAIN_ZONE: ${{ vars.DOMAIN_ZONE }}
+          CERTIFICATE_ARN: ${{ vars.CERTIFICATE_ARN }}

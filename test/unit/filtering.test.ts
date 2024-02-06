@@ -1,10 +1,5 @@
-import { RelationWithDates } from "../../src/types";
-import {
-  DateFilter,
-  LocationFilter,
-  filterByDateRange,
-  filterByLocation,
-} from "../../src/filtering";
+import { DateFilter, LocationFilter, RelationWithDates } from "../../src/types";
+import { filterByDateRange, filterByLocation } from "../../src/filtering";
 import { getAllStations } from "../../src/stationsService";
 
 jest.mock("../../src/stationsService");
