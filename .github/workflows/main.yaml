@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - main
+permissions:
+  id-token: write
+  contents: read
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -11,10 +14,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+      - name: "Configure AWS Credentials"
+        uses: aws-actions/configure-aws-credentials@v4.0.1
+        with:
+          role-to-assume: "arn:aws:iam::864031122359:role/github-deploy-role"
+          aws-region: "eu-central-1"
       - run: npm ci
       - run: npm test
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
       - run: npm run deploy
         env:
           API_NINJAS_KEY: ${{ secrets.API_NINJAS_KEY }}
