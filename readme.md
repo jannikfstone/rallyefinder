@@ -24,16 +24,22 @@ Filters must be sent in the POST body following this schema:
   "latestStartDate": string (ISO Date),
   "earliestEndDate": string (ISO Date),
   "latestEndDate": string (ISO Date),
-  "startLocation": string (Lat, Lon),
+  "startLocation": {
+    "latitude": number,
+    "longitude": number
+  },
   "startLocationRadius": number (in km),
-  "endLocation": string (Lat, Lon),
+  "endLocation": {
+    "latitude": number,
+    "longitude": number
+  },
   "endLocationRadius": number (in km)
 }
 ```
 
 Currently, you can specify location and/or date filters or none of them.
 If the date filter is set, all of the fields belonging to it MUST be set (earliest and latest start or end date).
-If the location filter is set, start and end coordinates MUST be set.
+If the location filter is set, both start and end coordinates MUST be set.
 The radius can be left out for any of them and will default to 30km in this case.
 
 The API will return a JSON with a searchId. You can use this ID to query the results of the search.
@@ -42,7 +48,8 @@ The API will return a JSON with a searchId. You can use this ID to query the res
 
 You can retrieve the results of your search by calling GET `/rallyefinder/search/{id}`.
 You will get a JSON back with a field `searchState` which can be "PENDING", "SUCCESS" or "ERROR".
-If the search is in state "SUCCESS" you will additionally get the search results as an array under the key `result`.
+If the search is in state "SUCCESS" you will additionally get the search results as an array under the key `searchResult`.
+The response will also contain a key `searchFilters` which reflects the search filters you passed in.
 
 ### Requirements
 
